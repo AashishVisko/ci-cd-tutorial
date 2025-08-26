@@ -1,78 +1,62 @@
-name: CD Pipeline to Google Cloud Run (staging and production)
+name: CD Pipeline to Render (staging and production)
+
 on:
   push:
     branches:
       - staging
-  workflow_dispatch: {}
+      - main
   release:
-    types: published
+    types: [published]
+  workflow_dispatch:
 
 env:
   PORT: 5001
-  IMAGE: ${{vars.IMAGE}}:${{github.sha}}
+  IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/my-node-app:${{ github.sha }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Setup, test, and build project
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm test
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Test application
-        run: npm test
-  build:
+  build-and-deploy:
     needs: test
     runs-on: ubuntu-latest
-    name: Setup project, Authorize GitHub Actions to GCP and Docker Hub, and deploy
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Authenticate for GCP
-        id: gcp-auth
-        uses: google-github-actions/auth@v0
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+      # Build & Push Docker Image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ env.IMAGE }}
 
-      - name: Authenticate for Docker Hub
-        id: docker-auth
-        env:
-          D_USER: ${{secrets.DOCKER_USER}}
-          D_PASS: ${{secrets.DOCKER_PASSWORD}}
+      # Deploy to Render (Staging)
+      - name: Deploy to Render Staging
+        if: github.ref == 'refs/heads/staging'
         run: |
-          docker login -u $D_USER -p $D_PASS
-      - name: Build and tag Image
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"imagePath":"${{ env.IMAGE }}"}' \
+            ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+
+      # Deploy to Render (Production)
+      - name: Deploy to Render Production
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.action == 'published')
         run: |
-          docker build -t ${{env.IMAGE}} .
-      - name: Push the image to Docker hub
-        run: |
-          docker push ${{env.IMAGE}}
-      - name: Enable the Billing API
-        run: |
-          gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
-      - name: Deploy to GCP Run - Production environment (If a new release was published from the master branch)
-        if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.target_commitish == 'main'
-        run: |
-          gcloud run deploy ${{vars.GCR_PROJECT_NAME}} \
-          --region ${{vars.GCR_REGION}} \
-          --image ${{env.IMAGE}} \
-          --platform "managed" \
-          --allow-unauthenticated \
-          --tag production \
-      - name: Deploy to GCP Run - Staging environment
-        if: github.ref != 'refs/heads/main'
-        run: |
-          echo "Deploying to staging environment"
-          # Deploy service with to staging environment
-          gcloud run deploy ${{vars.GCR_STAGING_PROJECT_NAME}} \
-          --region ${{vars.GCR_REGION}} \
-          --image ${{env.IMAGE}} \
-          --platform "managed" \
-          --allow-unauthenticated \
-          --tag staging \
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"imagePath":"${{ env.IMAGE }}"}' \
+            ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
