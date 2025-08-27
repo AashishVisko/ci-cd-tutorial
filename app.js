@@ -110,7 +110,7 @@ app.get("/", (req, res) => {
             <p>
                 Powered By
             </p>
-            <p> Ashish </p>
+            <p> Ashish Rajak</p>
         </div>
       </body>
     </html>
