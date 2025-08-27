@@ -11,7 +11,7 @@ on:
 
 env:
   PORT: 5001
-  IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/my-node-app:${{ github.sha }}
+  IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/ci-cd-node-cloudrun:${{ github.sha }}
 
 jobs:
   test:
