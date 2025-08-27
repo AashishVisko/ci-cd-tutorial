@@ -105,7 +105,7 @@ app.get("/", (req, res) => {
         </div>
         <div class="card">
             <p class="heading">
-                Server is Running
+                Server by ashish
             </p>
             <p>
                 Powered By
