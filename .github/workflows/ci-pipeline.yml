@@ -44,5 +44,5 @@ jobs:
       # Deploy to Render (Production)
       - name: Deploy to Render
         if: github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.action == 'published')
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -X POST ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
 
