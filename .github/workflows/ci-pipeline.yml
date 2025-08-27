@@ -41,16 +41,6 @@ jobs:
           push: true
           tags: ${{ env.IMAGE }}
 
-      # Deploy to Render (Staging)
-      - name: Deploy to Render Staging
-        if: github.ref == 'refs/heads/staging'
-        run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"imagePath":"${{ env.IMAGE }}"}' \
-            ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
-
       # Deploy to Render (Production)
       - name: Deploy to Render Production
         if: github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.action == 'published')
