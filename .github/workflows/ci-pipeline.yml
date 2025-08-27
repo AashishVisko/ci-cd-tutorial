@@ -1,25 +1,25 @@
-name: CD Pipeline to Render (staging and production)
+name: CI/CD Pipeline to Render (Production)
 
 on:
   push:
     branches:
-      - staging
       - main
   release:
     types: [published]
   workflow_dispatch:
 
 env:
-  PORT: 5001
-  IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/ci-cd-node-cloudrun:${{ github.sha }}
+  IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/node-app:${{ github.sha }}
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: npm ci
-      - run: npm test
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
 
   build-and-deploy:
     needs: test
@@ -42,11 +42,9 @@ jobs:
           tags: ${{ env.IMAGE }}
 
       # Deploy to Render (Production)
-      - name: Deploy to Render Production
+      - name: Deploy to Render
         if: github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.action == 'published')
         run: |
           curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
             -d '{"imagePath":"${{ env.IMAGE }}"}' \
-            ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
+            ${{ secrets.RENDER_DEPLOY_HOOK }}
