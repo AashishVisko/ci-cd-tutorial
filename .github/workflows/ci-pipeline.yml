@@ -45,6 +45,5 @@ jobs:
       - name: Deploy to Render
         if: github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.action == 'published')
         run: |
-          curl -X POST \
-            -d '{"imagePath":"${{ env.IMAGE }}"}' \
-            ${{ secrets.RENDER_DEPLOY_HOOK }}
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
