@@ -159,7 +159,7 @@ async function sendMotivationEmails() {
 }
 
 // ==================== TEST RUN ====================
-sendMotivationEmails(); // Run once immediately for testing
+// sendMotivationEmails(); // Run once immediately for testing
 
 // ==================== CRON JOB ====================
 cron.schedule("15 10 * * *", async () => {
