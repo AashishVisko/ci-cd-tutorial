@@ -2,13 +2,12 @@ FROM node:18-slim
 
 WORKDIR /app
 
-COPY package.json .
-
-RUN npm install -f
+COPY package.json ./
+RUN npm install --force
 
 COPY . .
 
-# EXPOSE 8080
+# Render will provide PORT dynamically
 EXPOSE 8080
 
 CMD ["npm", "start"]
