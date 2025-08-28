@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
                 border-radius: 10px;
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(255, 255, 255, 0.2);
+                margin-bottom: 5px;
             }
             h1 { margin-top: 0; }
             .card {
@@ -105,7 +106,7 @@ app.get("/", (req, res) => {
         </div>
         <div class="card">
             <p class="heading">
-                Server by ashish
+                🚀 Express.js Server is Running!
             </p>
             <p>
                 Powered By
