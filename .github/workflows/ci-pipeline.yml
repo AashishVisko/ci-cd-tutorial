@@ -32,7 +32,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/node-app:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/node-app:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/node-app:${{ github.sha }}
 
   deploy:
     needs: [test, build-and-push]
